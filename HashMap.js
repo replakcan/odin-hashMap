@@ -27,6 +27,10 @@ class HashMap {
 
       this.buckets[bucketIndex].at(index).value = { key, value }
     } else {
+      if (this.isNextEntryAddExceedsTheLimit()) {
+        this.reSetAllEntriesWithUpdatedCapacity()
+        return
+      }
       this.buckets[bucketIndex].append({ key, value })
     }
   }
@@ -43,6 +47,17 @@ class HashMap {
     }
 
     return null
+  }
+
+  insertEntry(key, value) {
+    const bucketIndex = this.hash(key)
+
+    if (this.buckets[bucketIndex].containsKey(key)) {
+      const index = this.buckets[bucketIndex].findIndexByKey(key)
+      this.buckets[bucketIndex].at(index).value = { key, value }
+    } else {
+      this.buckets[bucketIndex].append({ key, value })
+    }
   }
 
   has(key) {
@@ -134,6 +149,28 @@ class HashMap {
     }
 
     return entries
+  }
+
+  doubleCapacity() {
+    this.capacity *= 2
+
+    return this.capacity
+  }
+
+  isNextEntryAddExceedsTheLimit() {
+    return this.entries().length + 1 > this.loadFactor * this.capacity
+  }
+
+  reSetAllEntriesWithUpdatedCapacity() {
+    const entries = this.entries()
+
+    this.clear()
+    this.doubleCapacity()
+    this.buckets = Array.from({ length: this.capacity }, () => new LinkedList())
+
+    for (let [key, value] of entries) {
+      this.insertEntry(key, value)
+    }
   }
 }
 
